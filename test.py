@@ -6,6 +6,9 @@ import math
 
 print("Starting...")
 
+def dutyCycleBounded(x):
+    return round(max(0.0, min(100.0, x)))
+
 # Set the LED GPIO number
 LED_GPIO = 21
 
@@ -22,13 +25,13 @@ pwm = GPIO.PWM(LED_GPIO, refreshHtz)
 pwm.start(startingPower)
 
 a = 60.0
-b = 10.0
+b = 15.0
 c = 4.0
 
 d = 30.0
 f = 5.0
 g = 0.6
-h = 0.0
+h = 4.0
 i = 8.0
 
 x = 0.0
@@ -45,8 +48,8 @@ try:
             d = random.uniform(20.0, 40.0)
 #            f = random.uniform(4.0, 6.0)
             g = random.uniform(0.4, 0.8)
-            h = random.uniform(3.0, 5.0)
-            i = 8.0
+            h = float(random.randint(3, 6))
+            i = random.uniform(1.0, 10.0)
             flicker = True
 
         if flicker:
@@ -57,7 +60,7 @@ try:
             if x2 >= h:
                 flicker = False
 
-        pwm.ChangeDutyCycle(round(max(0.0, min(100.0, y))))
+        pwm.ChangeDutyCycle(dutyCycleBounded(y))
 
         i -= step
         x += step
