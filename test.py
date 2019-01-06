@@ -21,14 +21,42 @@ startingPower = 0
 pwm = GPIO.PWM(LED_GPIO, refreshHtz)
 pwm.start(startingPower)
 
+a = 60.0
+b = 10.0
+c = 4.0
+
+d = 30.0
+f = 5.0
+g = 0.6
+
+x = 0.0
+x2 = 0.0
+step = 0.01
+flicker = False
+
 try:
     while True:
-        for dc in range(0, 101, 2):
-            pwm.ChangeDutyCycle(dc)
-            time.sleep(0.02)
-        for dc in range(100, -1, -2):
-            pwm.ChangeDutyCycle(dc)
-            time.sleep(0.02)
+        y = a - b * math.cos((2.0 / c) * math.pi * x)
+
+        if (x % 8.0):
+            d = random.uniform(20.0, 40.0)
+#            f = random.uniform(4.0, 6.0)
+            g = random.uniform(0.4, 0.8)
+            flicker = True
+
+        if flicker:
+            pre = d / 2.0 * math.pow(math.e, -g * x2)
+            y2 = pre - pre * math.cos(2 * f * math.pi * x2)
+            x2 += step
+            y += y2
+            if (x2 >= 4.0):
+                flicker = False
+                x2 = 0.0
+
+        pwm.ChangeDutyCycle(round(max(0, min(100, y))))
+        
+        x += step
+        time.sleep(step)
 
 except KeyboardInterrupt:
     pass
