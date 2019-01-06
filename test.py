@@ -28,6 +28,8 @@ c = 4.0
 d = 30.0
 f = 5.0
 g = 0.6
+h = 0.0
+i = 8.0
 
 x = 0.0
 x2 = 0.0
@@ -38,23 +40,26 @@ try:
     while True:
         y = a - b * math.cos((2.0 / c) * math.pi * x)
 
-        if (x % 8.0):
+        if i <= 0.0:
+            x2 = 0.0
             d = random.uniform(20.0, 40.0)
 #            f = random.uniform(4.0, 6.0)
             g = random.uniform(0.4, 0.8)
+            h = random.uniform(3.0, 5.0)
+            i = 8.0
             flicker = True
 
         if flicker:
             pre = d / 2.0 * math.pow(math.e, -g * x2)
-            y2 = pre - pre * math.cos(2 * f * math.pi * x2)
+            y2 = pre - pre * math.cos(2.0 * f * math.pi * x2)
             x2 += step
             y += y2
-            if (x2 >= 4.0):
+            if x2 >= h:
                 flicker = False
-                x2 = 0.0
 
-        pwm.ChangeDutyCycle(round(max(0, min(100, y))))
-        
+        pwm.ChangeDutyCycle(round(max(0.0, min(100.0, y))))
+
+        i -= step
         x += step
         time.sleep(step)
 
