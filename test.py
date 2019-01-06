@@ -1,76 +1,79 @@
 # Import the Python libraries needed
-import RPi.GPIO as GPIO
+import RPi.GPIO as gpio
 import time
 import random
 import math
 
+
+def bound_duty_cycle(val):
+    return round(max(0.0, min(100.0, val)))
+
+
 print("Starting...")
 
-def dutyCycleBounded(x):
-    return round(max(0.0, min(100.0, x)))
-
 # Set the LED GPIO number
-LED_GPIO = 21
+ledGpio = 21
 
 # Set the GPIO mode to Broadcom pin numbers, not Board pin numbers
-GPIO.setmode(GPIO.BCM)
+gpio.setmode(gpio.BCM)
 
 # Set the LED GPIO pin as an output
-GPIO.setup(LED_GPIO, GPIO.OUT)
+gpio.setup(ledGpio, gpio.OUT)
 
 # Setup pulse-width modulation
 refreshHtz = 300
 startingPower = 0
-pwm = GPIO.PWM(LED_GPIO, refreshHtz)
+pwm = gpio.PWM(ledGpio, refreshHtz)
 pwm.start(startingPower)
 
-a = 60.0
-b = 15.0
-c = 4.0
+averageLevel = 60.0
+levelVariance = 15.0
+varianceHtz = 0.25
 
-d = 30.0
-f = 5.0
-g = 0.6
-h = 4.0
-i = 8.0
+flickerMaxLevel = 30.0
+flickerHtz = 5.0
+flickerDampening = 0.4
+flickerDuration = 4.0
+flickerDelay = 8.0
 
-x = 0.0
-x2 = 0.0
-step = 0.01
-flicker = False
+timeAccum = 0.0
+flickerTimeAccum = 0.0
+timeStep = 0.01
+isFlicker = False
 
 try:
     while True:
-        y = a - b * math.cos((2.0 / c) * math.pi * x)
+        level = averageLevel - levelVariance * math.cos((2.0 * varianceHtz) * math.pi * timeAccum)
 
-        if i <= 0.0:
-            x2 = 0.0
-            d = random.uniform(20.0, 40.0)
-#            f = random.uniform(4.0, 6.0)
-            g = random.uniform(0.4, 0.8)
-            h = float(random.randint(3, 6))
-            i = random.uniform(1.0, 10.0)
-            flicker = True
+        if flickerDelay <= 0.0:
+            flickerTimeAccum = 0.0
+            flickerMaxLevel = random.uniform(20.0, 40.0)
+#            flickerHtz = random.uniform(4.0, 6.0)
+            flickerDampening = random.uniform(0.2, 0.6)
+            flickerDuration = float(random.randint(3, 6))
+            flickerDelay = random.uniform(1.0, 10.0)
+            isFlicker = True
 
-        if flicker:
-            pre = d / 2.0 * math.pow(math.e, -g * x2)
-            y2 = pre - pre * math.cos(2.0 * f * math.pi * x2)
-            x2 += step
-            y += y2
-            if x2 >= h:
-                flicker = False
+        if isFlicker:
+            flickerLevel = flickerMaxLevel / 2.0 * math.pow(math.e, -flickerDampening * flickerTimeAccum)
+#            adjustedFlickerLevel = flickerLevel - flickerLevel * math.cos(2.0 * flickerHtz * math.pi * flickerTimeAccum)
+            adjustedFlickerLevel = flickerLevel * (1 - math.cos(2.0 * flickerHtz * math.pi * flickerTimeAccum))
+            flickerTimeAccum += timeStep
+            level += adjustedFlickerLevel
+            if flickerTimeAccum >= flickerDuration:
+                isFlicker = False
 
-        pwm.ChangeDutyCycle(dutyCycleBounded(y))
+        pwm.ChangeDutyCycle(bound_duty_cycle(level))
 
-        i -= step
-        x += step
-        time.sleep(step)
+        flickerDelay -= timeStep
+        timeAccum += timeStep
+        time.sleep(timeStep)
 
 except KeyboardInterrupt:
     pass
 
 # Clean up
 pwm.stop()
-GPIO.cleanup()
+gpio.cleanup()
 
 print("Complete")
