@@ -1,15 +1,27 @@
+# Import the Python libraries needed
 import RPi.GPIO as GPIO
 import time
+import random
+import math
 
-led_pin = 27
+print("Starting...")
+
+# Set the LED GPIO number
+LED_GPIO = 21
+
+# Set the GPIO mode to Broadcom pin numbers, not Board pin numbers
+GPIO.setmode(GPIO.BCM)
+
+# Set the LED GPIO pin as an output
+GPIO.setup(LED_GPIO, GPIO.OUT)
+
+# Setup pulse-width modulation
+refreshHtz = 300
+startingPower = 0
+pwm = GPIO.PWM(LED_GPIO, refreshHtz)
+pwm.start(startingPower)
 
 try:
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(led_pin, GPIO.OUT)
-
-    pwm = GPIO.PWM(led_pin, 100)
-    pwm.start(0)
-
     while True:
         for dc in range(0, 101, 2):
             pwm.ChangeDutyCycle(dc)
@@ -21,5 +33,8 @@ try:
 except KeyboardInterrupt:
     pass
 
+# Clean up
 pwm.stop()
 GPIO.cleanup()
+
+print("Complete")
